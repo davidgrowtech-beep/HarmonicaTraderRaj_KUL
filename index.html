@@ -3,78 +3,124 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
-<title>Harmonic Traders</title>
+<title>Harmonic Trader</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 <style>
-*{margin:0;padding:0;box-sizing:border-box;font-family:'Inter',system-ui,-apple-system,sans-serif;-webkit-tap-highlight-color:transparent;}
+:root{
+  --bg-deep:#050b18; --bg-mid:#0d1b30;
+  --cyan:#00d9ff; --green:#22e58a; --red:#ff5a5a; --gold:#ffcb47;
+  --ink:#eef3fb; --muted:#93a4bd; --line:rgba(148,182,214,0.16);
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
 html{-webkit-text-size-adjust:100%;text-size-adjust:100%;}
 body{
+  font-family:'Inter',system-ui,-apple-system,sans-serif;
   min-height:100vh; min-height:100svh; display:flex; justify-content:center; align-items:center;
   padding:20px; padding-top:max(20px, env(safe-area-inset-top)); padding-bottom:max(20px, env(safe-area-inset-bottom));
-  color:#e2e8f0; overflow-x:hidden; width:100%;
-  background:radial-gradient(circle at center, #0b1528 0%, #040814 100%);
+  color:var(--ink); overflow-x:hidden; width:100%;
+  background:
+    radial-gradient(circle at 15% 0%, rgba(0,217,255,0.10), transparent 45%),
+    radial-gradient(circle at 90% 100%, rgba(34,229,138,0.09), transparent 40%),
+    radial-gradient(circle at center, var(--bg-mid) 0%, var(--bg-deep) 100%);
 }
-.wrapper{ width:100%; max-width:440px; text-align:center; margin:0 auto; }
+.wrapper{ width:100%; max-width:420px; margin:0 auto; }
 .card{
-  position:relative; overflow:hidden; width:100%; padding:clamp(22px,6vw,35px) clamp(16px,5vw,25px); border-radius:16px;
-  background:rgba(1,9,24,0.75);
-  backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px);
-  border:1px solid rgba(136,201,221,0.25);
-  box-shadow:0 24px 50px rgba(0,0,0,0.6), 0 0 30px rgba(136,201,221,0.05);
+  position:relative; overflow:hidden; width:100%; padding:clamp(20px,6vw,30px) clamp(16px,5vw,26px) clamp(26px,6vw,32px);
+  border-radius:22px; text-align:center;
+  background:rgba(6,14,28,0.82);
+  backdrop-filter:blur(18px); -webkit-backdrop-filter:blur(18px);
+  border:1px solid var(--line);
+  box-shadow:0 30px 60px rgba(0,0,0,0.55);
 }
-.card::before{
-  content:""; position:absolute; width:200px; height:200px; background:#88c9dd;
-  border-radius:50%; filter:blur(100px); opacity:.12; top:-80px; left:-80px;
+.topbar{ position:absolute; top:0; left:0; width:100%; height:5px;
+  background:linear-gradient(90deg,var(--red),var(--gold),var(--green),var(--cyan)); }
+
+.logo-shell{ margin-top:6px; display:flex; justify-content:center; }
+.logo-frame{
+  width:clamp(96px,26vw,122px); height:clamp(96px,26vw,122px); border-radius:20px; overflow:hidden;
+  border:3px solid var(--cyan); box-shadow:0 0 0 5px rgba(0,217,255,0.10), 0 10px 26px rgba(0,0,0,0.5);
 }
-.profile{
-  width:clamp(80px,22vw,110px); height:clamp(80px,22vw,110px); border-radius:24px; object-fit:cover; max-width:100%;
-  border:3px solid #88c9dd; box-shadow:0 0 20px rgba(136,201,221,0.3);
-  position:relative; z-index:2;
+.logo-frame img{ width:100%; height:100%; object-fit:cover; display:block; }
+
+.badge{
+  margin:14px auto 0; display:inline-flex; align-items:center; gap:6px;
+  padding:6px 14px; border-radius:999px; font-size:clamp(11px,3vw,12.5px); font-weight:700; letter-spacing:.3px;
+  color:#0a1f14; background:linear-gradient(120deg,var(--green),#7CFFB2);
 }
-.verify{ margin-top:15px; color:#a6ff00; font-size:clamp(11px,3vw,13px); font-weight:700; letter-spacing:1px; text-transform:uppercase; word-break:break-word; }
-.verify i{ color:#00ff88; }
-h2{ margin-top:12px; font-size:clamp(18px,5.5vw,24px); color:#ffffff; font-weight:800; letter-spacing:.5px; text-shadow:0 2px 10px rgba(0,0,0,.5); line-height:1.3; word-wrap:break-word; overflow-wrap:break-word; }
-.stats{
-  margin-top:20px; color:#94a3b8; font-size:clamp(12px,3.4vw,13px); font-weight:500;
-  background:rgba(136,201,221,0.05); padding:clamp(10px,3vw,14px); border-radius:12px;
-  border:1px solid rgba(136,201,221,0.1); display:grid; grid-template-columns:1fr; gap:8px; text-align:left;
+.badge i{ font-size:12px; }
+
+h1{
+  font-family:'Poppins',sans-serif; margin-top:16px; font-size:clamp(19px,5.6vw,25px); font-weight:800;
+  line-height:1.35; color:#fff; word-wrap:break-word; overflow-wrap:break-word;
 }
-.stats div{ word-wrap:break-word; overflow-wrap:break-word; line-height:1.5; }
-.stats span{ color:#88c9dd; font-weight:700; }
-.text{ margin-top:18px; line-height:1.6; font-size:clamp(13px,3.6vw,14px); color:#cbd5e1; white-space:pre-wrap; word-wrap:break-word; overflow-wrap:break-word; }
-.benefits{ margin-top:20px; background:rgba(255,255,255,.02); border:1px solid rgba(255,255,255,.05); border-radius:12px; padding:clamp(10px,3vw,15px); text-align:left; }
-.benefits div{ padding:8px 0; color:#e2e8f0; font-size:clamp(12.5px,3.4vw,13.5px); display:flex; align-items:flex-start; gap:12px; border-bottom:1px solid rgba(255,255,255,.03); line-height:1.5; word-wrap:break-word; overflow-wrap:break-word; }
-.benefits div i{ margin-top:2px; flex-shrink:0; }
-.benefits div:last-child{ border-bottom:none; }
+.brand-line{ margin-top:6px; font-size:clamp(12px,3.4vw,13.5px); color:var(--muted); font-weight:600; }
+
+.chips{ margin-top:18px; display:flex; flex-wrap:wrap; gap:8px; justify-content:center; }
+.chip{
+  display:flex; align-items:center; gap:6px; padding:8px 12px; border-radius:12px;
+  background:rgba(255,255,255,0.04); border:1px solid var(--line);
+  font-size:clamp(11.5px,3.2vw,12.5px); color:var(--ink); font-weight:600; text-align:left;
+}
+.chip b{ color:var(--cyan); font-weight:800; }
+.chip.gold b{ color:var(--gold); }
+.chip.green b{ color:var(--green); }
+
+.lead{ margin-top:16px; font-size:clamp(13px,3.6vw,14.5px); line-height:1.6; color:#cfd9ea; }
+
+.benefits{ margin-top:18px; display:grid; gap:2px; text-align:left; }
+.benefit{
+  display:flex; align-items:flex-start; gap:12px; padding:10px 4px;
+  border-bottom:1px solid var(--line); font-size:clamp(12.5px,3.4vw,13.5px); color:var(--ink); line-height:1.5;
+}
+.benefit:last-child{ border-bottom:none; }
+.benefit .ico{
+  flex-shrink:0; width:30px; height:30px; border-radius:9px; display:flex; align-items:center; justify-content:center;
+  font-size:14px; margin-top:1px;
+}
+.ico.c1{ background:rgba(34,229,138,0.14); color:var(--green); }
+.ico.c2{ background:rgba(0,217,255,0.14); color:var(--cyan); }
+.ico.c3{ background:rgba(255,90,90,0.14); color:var(--red); }
+.ico.c4{ background:rgba(255,203,71,0.14); color:var(--gold); }
+.ico.c5{ background:rgba(124,140,255,0.14); color:#9aa8ff; }
+
 .btn{
-  margin-top:22px; display:flex; align-items:center; justify-content:center; gap:10px; width:100%; padding:16px;
-  border-radius:12px; text-decoration:none; color:#fff; font-size:clamp(13px,3.8vw,15px); font-weight:700; letter-spacing:.5px;
-  background:linear-gradient(135deg, #00b4db, #0083b0);
-  box-shadow:0 8px 24px rgba(0,180,219,0.3);
-  transition:all .3s ease; position:relative; overflow:hidden; border:none; cursor:pointer; text-align:center;
-  min-height:48px; touch-action:manipulation;
+  margin-top:22px; position:relative; display:flex; align-items:center; justify-content:center; gap:10px;
+  width:100%; min-height:54px; padding:16px; border:none; cursor:pointer; touch-action:manipulation;
+  border-radius:14px; text-decoration:none; color:#03121a; font-weight:800; letter-spacing:.3px;
+  font-size:clamp(14px,3.9vw,16px);
+  background:linear-gradient(270deg,var(--cyan),var(--green),var(--gold),var(--cyan));
+  background-size:600% 600%;
+  animation:flow 4s ease infinite, glow 1.6s ease-in-out infinite;
 }
-.btn:hover{ transform:translateY(-2px); box-shadow:0 12px 28px rgba(0,180,219,0.5); }
-.btn:active{ transform:translateY(0); }
-.timer{ margin-top:18px; color:#64748b; font-size:clamp(11px,3vw,12px); }
-.disclaimer{ margin-top:22px; font-size:clamp(10px,2.8vw,11px); line-height:1.7; color:#64748b; padding:0 5px; word-wrap:break-word; overflow-wrap:break-word; }
-img{ max-width:100%; }
+.btn i{ font-size:17px; }
+.btn:active{ transform:translateY(1px); }
+@keyframes flow{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+@keyframes glow{
+  0%,100%{ box-shadow:0 0 16px rgba(0,217,255,.55), 0 8px 20px rgba(0,0,0,.4); }
+  50%{ box-shadow:0 0 32px rgba(34,229,138,.7), 0 8px 24px rgba(0,0,0,.4); }
+}
+@media (prefers-reduced-motion:reduce){ .btn{ animation:none; box-shadow:0 8px 20px rgba(0,217,255,.4); } }
+
+.timer{ margin-top:16px; font-size:clamp(11px,3vw,12px); color:var(--muted); }
+.timer span{ color:var(--cyan); font-weight:800; }
+
+.disclaimer{ margin-top:20px; font-size:clamp(10px,2.8vw,11px); line-height:1.7; color:#66748c; }
+.credit{ margin-top:8px; font-size:clamp(10px,2.6vw,10.5px); color:#4d5a70; }
+
 @media(max-width:380px){
   body{ padding:12px; }
-  .card{ border-radius:14px; }
-  .btn{ letter-spacing:.2px; gap:6px; }
-  .benefits div, .stats div{ gap:8px; }
+  .card{ border-radius:18px; }
+  .chips{ gap:6px; }
 }
 @media(max-height:640px){
-  .wrapper{ max-width:400px; }
-  h2{ margin-top:8px; }
-  .stats, .benefits{ margin-top:14px; }
-  .btn{ margin-top:16px; padding:13px; }
-  .timer{ margin-top:12px; }
-  .disclaimer{ margin-top:14px; }
-}
-@media(min-width:480px) and (max-width:900px){
-  .wrapper{ max-width:480px; }
+  h1{ margin-top:10px; }
+  .chips,.benefits{ margin-top:12px; }
+  .btn{ margin-top:16px; padding:13px; min-height:48px; }
+  .timer{ margin-top:10px; }
+  .disclaimer{ margin-top:12px; }
 }
 </style>
 
@@ -95,63 +141,49 @@ fbq('track', 'PageView');
 <body>
 <div class="wrapper">
   <div class="card">
-    <img src="TR.png" alt="Profile">
-    <div class="verify"><i class="fas fa-check-circle"></i> LEARN with HARMONIC TRADERS (RAJ)</div>
-    <h2>நிரூபிக்கப்பட்ட சிறந்த திறன்களை வழங்குகிறோம்™</h2>
-    <div class="stats">
-    <div>⭐ <span>4,254+&lt;/span&gt; உறுப்பினர்களைக் கொண்ட வலுவான சமூகத்தில் இணைந்திடுங்கள்</span> </div>
-  
-    <div>🌍 <span>Fastest Growing</span> தினந்தோறும் வளர்ந்து வரும் நம்பகமான தளத்துடன் 24×7 முழுநேர ஆதரவு சேவையைப் பெறுங்கள்</div>
-  
-    <div>🔥 <span>நிரூபிக்கப்பட்ட உத்திகள்</span> ஆழமான ஆய்வுகளின் அடிப்படையில் நம்பிக்கையுடன் சரியான முடிவுகளை எடுக்குங்கள்</div>
-  </div>
-    <div class="text">📚 நிபுணர்களிடமிருந்து மேலும் பல திறன்களைக் கற்று, அவற்றை நிஜ வாழ்க்கையில் பயன்படுத்துங்கள்</div>
+    <div class="topbar"></div>
+
+    <div class="logo-shell">
+      <div class="logo-frame">
+        <img src="trader-logo.png" alt="Harmonic Trader">
+      </div>
+    </div>
+
+    <div class="badge"><i class="fas fa-circle-check"></i> VERIFIED &middot; HARMONIC TRADERS (RAJ)</div>
+
+    <h1>நிரூபிக்கப்பட்ட சிறந்த திறன்களை வழங்குகிறோம்™</h1>
+    <div class="brand-line">தமிழ் &middot; Harmonic Trader Community</div>
+
+    <div class="chips">
+      <div class="chip"><i class="fas fa-star" style="color:var(--gold);"></i> <b>4,254+</b>&nbsp;உறுப்பினர்கள்</div>
+      <div class="chip green"><i class="fas fa-arrow-trend-up" style="color:var(--green);"></i> <b>Fastest</b>&nbsp;Growing</div>
+      <div class="chip gold"><i class="fas fa-fire" style="color:var(--red);"></i> <b>24×7</b>&nbsp;Support</div>
+    </div>
+
+    <div class="lead">📚 நிபுணர்களிடமிருந்து மேலும் பல திறன்களைக் கற்று, அவற்றை நிஜ வாழ்க்கையில் பயன்படுத்துங்கள்</div>
+
+    <div class="benefits">
+      <div class="benefit"><span class="ico c1"><i class="fas fa-chart-line"></i></span> Daily Proven and strategic Updates</div>
+      <div class="benefit"><span class="ico c2"><i class="fas fa-book-open"></i></span> Just for Free Learning Content</div>
+      <div class="benefit"><span class="ico c3"><i class="fas fa-bullseye"></i></span> Easy explanation for beginners</div>
+      <div class="benefit"><span class="ico c5"><i class="fas fa-users"></i></span> 24 X 7 Full Community Support</div>
+      <div class="benefit"><span class="ico c4"><i class="fas fa-lightbulb"></i></span> Learn best skills from experts</div>
+    </div>
+
     <a class="btn" id="telegramBtn" href="https://t.me/+ZL7rDNTxWDQ0Mjhl" rel="noopener noreferrer">
       <i class="fab fa-telegram"></i> JOIN FREE TELEGRAM CHANNEL <i class="fas fa-arrow-right"></i>
     </a>
-    <div class="benefits">
-    <div><i class="fas fa-chart-line" style="color:#00ff88;"></i> Daily Proven and strategic Updates</div>
-      <div><i class="fas fa-book-open" style="color:#00c2ff;"></i> Just for Free Learning Content</div>
-      <div><i class="fas fa-bullseye" style="color:#ff4a4a;"></i> Easy explanation for beginers</div>
-      <div><i class="fas fa-users" style="color:#3b82f6;"></i> 24 X 7 Full Community Support</div>
-      <div><i class="fas fa-lightbulb" style="color:#eab308;"></i> Lern best skills by experts and grab</div>
+
+    <div class="timer"><span id="countTxt"></span></div>
+
+    <div class="disclaimer"><strong>Disclaimer:</strong> This platform is only for educational purposes.</div>
+    <div class="credit">* Advertised by: SRS Marketing Agency &middot; 95574-67145</div>
   </div>
-    
-<div class="timer">
-  <span id="countTxt"></span>
 </div>
-  </div>
-  <div class="disclaimer"><strong>Disclaimer:</strong> Disclaimer: This Platform is only for educational purpose </div>
-
-  <footer>
-    <div class="footer-content">
-      
-      <div style="text-align:center; margin:14px 0 10px 0; padding-top:10px; border-top:1px solid rgba(255,255,255,0.08);">
-            <p style="font-weight:bold; margin-bottom:6px; font-size:11px; color:#94a3b8;">Advertised by : SRS Marketing Agency</p>
-            <a href="https://t.me/srsagency" target="_blank" style="
-                display:inline-block;
-                background-color:#229ED9;
-                color:#ffffff;
-                padding:6px 14px;
-                border-radius:6px;
-                text-decoration:none;
-                font-weight:600;
-                font-size:12px;
-                font-family:sans-serif;">
-                📩 Visit @ SRS | Marketing ...
-            </a>
-        </div>
-
-<p>© 2026 LEARN with HARMONIC TRADERS (RAJ). All rights reserved.</p>
-  <div>* Adertised by : SRS Marketing Agency @ 95574-67145 </div>
-
-
-
-
 
 <script>
 /* ---- lightweight fake-traffic / bot filter ----
-   Goal: only count a real, interacted human as a "Subscribe" and only send
+   Only counts a real, interacted human as a "Subscribe" and only sends
    real humans on to the Telegram channel, so ad spend isn't wasted on bots. */
 const TELEGRAM_LINK = "https://t.me/+ZL7rDNTxWDQ0Mjhl";
 const pageLoadTime = Date.now();
@@ -175,7 +207,6 @@ function isLikelyBot(){
 let hasFired = false;
 document.getElementById('telegramBtn').addEventListener('click', function(e){
   e.preventDefault();
-  // a genuine click is itself a strong human signal
   humanSignal = true;
   const bot = isLikelyBot();
 
@@ -187,13 +218,12 @@ document.getElementById('telegramBtn').addEventListener('click', function(e){
   if(!bot){
     setTimeout(()=>{ window.location.href = TELEGRAM_LINK; }, 400);
   }
-  // if flagged as a bot, we simply don't redirect or fire the event
 });
 
 let time = 30;
 const timerTextTpl = "⏳ Redirecting in 30 seconds";
 const countTxt = document.getElementById('countTxt');
-function paintTimer(){ countTxt.innerHTML = timerTextTpl.replace('{n}', '<span style="color:#88c9dd;font-weight:bold;">'+time+'</span>'); }
+function paintTimer(){ countTxt.innerHTML = timerTextTpl.replace('{n}', '<span>'+time+'</span>'); }
 paintTimer();
 const countdown = setInterval(()=>{
   time--;
@@ -206,7 +236,6 @@ const countdown = setInterval(()=>{
   }
   paintTimer();
 }, 1000);
-
 </script>
 </body>
 </html>
