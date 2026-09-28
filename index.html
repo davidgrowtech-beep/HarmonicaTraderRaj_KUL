@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="hi">
+<html lang="ta">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
@@ -182,15 +182,19 @@ fbq('track', 'PageView');
 </div>
 
 <script>
-/* ---- lightweight fake-traffic / bot filter ----
-   Only counts a real, interacted human as a "Subscribe" and only sends
-   real humans on to the Telegram channel, so ad spend isn't wasted on bots. */
+/* ---- fake-traffic filter (v2) ----
+   - Subscribe fires only for trusted (real) clicks, after real user interaction + minimum dwell time
+   - Same visitor is counted once per 7 days (no duplicate Subscribe on reload/re-click)
+   - Bots / headless / scripted clicks are ignored */
 const TELEGRAM_LINK = "https://t.me/+ZL7rDNTxWDQ0Mjhl";
 const pageLoadTime = Date.now();
-const MIN_DWELL_MS = 1200; // page must be open at least this long
+const MIN_DWELL_MS = 2000;
+const STORE_KEY = 'ht_subscribe_ts';
+const DEDUPE_MS = 7*24*60*60*1000;
 let humanSignal = false;
+let hasFired = false;
 
-function markHuman(){ humanSignal = true; }
+function markHuman(e){ if(e && e.isTrusted) humanSignal = true; }
 ['mousemove','touchstart','scroll','keydown','pointerdown'].forEach(function(ev){
   window.addEventListener(ev, markHuman, {once:true, passive:true});
 });
@@ -199,39 +203,38 @@ function isLikelyBot(){
   try{
     if (navigator.webdriver) return true;
     if (/HeadlessChrome|Puppeteer|Selenium|PhantomJS|bot|crawler|crawl|spider|Googlebot|bingbot|facebookexternalhit/i.test(navigator.userAgent)) return true;
-    if (Date.now() - pageLoadTime < MIN_DWELL_MS) return true;
-  }catch(err){ /* if the check itself fails, don't block a real user */ }
+    if (!navigator.languages || navigator.languages.length === 0) return true;
+  }catch(err){ /* never block a real user if the check itself fails */ }
   return false;
 }
+function alreadyCounted(){
+  try{ const t = parseInt(localStorage.getItem(STORE_KEY)||'0',10); return t && (Date.now()-t) < DEDUPE_MS; }catch(err){ return false; }
+}
+function markCounted(){ try{ localStorage.setItem(STORE_KEY, String(Date.now())); }catch(err){} }
 
-let hasFired = false;
 document.getElementById('telegramBtn').addEventListener('click', function(e){
   e.preventDefault();
-  humanSignal = true;
-  const bot = isLikelyBot();
+  if(!e.isTrusted || isLikelyBot()) return;            // scripted / bot click -> ignore completely
 
-  if(!bot && !hasFired && typeof fbq === 'function'){
+  const dwellOk = (Date.now() - pageLoadTime) >= MIN_DWELL_MS;
+  if(dwellOk && humanSignal && !hasFired && !alreadyCounted() && typeof fbq === 'function'){
     hasFired = true;
+    markCounted();
     fbq('track','Subscribe',{content_name:'Telegram Community', button_click:true},{eventID:'telegram_subscribe_'+Date.now()});
   }
-
-  if(!bot){
-    setTimeout(()=>{ window.location.href = TELEGRAM_LINK; }, 400);
-  }
+  setTimeout(function(){ window.location.href = TELEGRAM_LINK; }, 400);
 });
 
 let time = 30;
-const timerTextTpl = "⏳ Redirecting in 30 seconds";
+const timerTextTpl = "⏳ Redirecting in {n} seconds";
 const countTxt = document.getElementById('countTxt');
 function paintTimer(){ countTxt.innerHTML = timerTextTpl.replace('{n}', '<span>'+time+'</span>'); }
 paintTimer();
-const countdown = setInterval(()=>{
+const countdown = setInterval(function(){
   time--;
   if(time <= 0){
     clearInterval(countdown);
-    if(!isLikelyBot()){
-      window.location.href = TELEGRAM_LINK;
-    }
+    if(humanSignal && !isLikelyBot()){ window.location.href = TELEGRAM_LINK; }  // no Subscribe event on auto-redirect
     return;
   }
   paintTimer();
