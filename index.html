@@ -97,6 +97,8 @@ h1{
 }
 .btn i{ font-size:17px; }
 .btn:active{ transform:translateY(1px); }
+/* locked = first ~1.5s, or visitor not allowed (bot / outside India) */
+.btn.locked{ animation:none; opacity:.55; cursor:default; box-shadow:none; filter:grayscale(.4); }
 @keyframes flow{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
 @keyframes glow{
   0%,100%{ box-shadow:0 0 16px rgba(0,217,255,.55), 0 8px 20px rgba(0,0,0,.4); }
@@ -104,8 +106,9 @@ h1{
 }
 @media (prefers-reduced-motion:reduce){ .btn{ animation:none; box-shadow:0 8px 20px rgba(0,217,255,.4); } }
 
-.timer{ margin-top:16px; font-size:clamp(11px,3vw,12px); color:var(--muted); }
-.timer span{ color:var(--cyan); font-weight:800; }
+.status{ margin-top:14px; font-size:clamp(11px,3vw,12px); color:var(--muted); line-height:1.6; min-height:1em; }
+.iabanner{ display:none; margin-top:12px; padding:10px 12px; border-radius:10px; font-size:12px; line-height:1.5;
+  color:#ffe9a8; background:rgba(255,203,71,0.10); border:1px solid rgba(255,203,71,0.3); }
 
 .disclaimer{ margin-top:20px; font-size:clamp(10px,2.8vw,11px); line-height:1.7; color:#66748c; }
 .credit{ margin-top:8px; font-size:clamp(10px,2.6vw,10.5px); color:#4d5a70; }
@@ -119,7 +122,7 @@ h1{
   h1{ margin-top:10px; }
   .chips,.benefits{ margin-top:12px; }
   .btn{ margin-top:16px; padding:13px; min-height:48px; }
-  .timer{ margin-top:10px; }
+  .status{ margin-top:10px; }
   .disclaimer{ margin-top:12px; }
 }
 </style>
@@ -149,7 +152,7 @@ fbq('track', 'PageView');
       </div>
     </div>
 
-    <div class="badge"><i class="fas fa-circle-check"></i> VERIFIED &middot; HARMONIC TRADERS (RAJ)</div>
+    <div class="badge"><i class="fas fa-circle-check"></i> HARMONIC TRADERS (RAJ)</div>
 
     <h1>நிரூபிக்கப்பட்ட சிறந்த திறன்களை வழங்குகிறோம்™</h1>
     <div class="brand-line">தமிழ் &middot; Harmonic Trader Community</div>
@@ -170,11 +173,13 @@ fbq('track', 'PageView');
       <div class="benefit"><span class="ico c4"><i class="fas fa-lightbulb"></i></span> Learn best skills from experts</div>
     </div>
 
-    <a class="btn" id="telegramBtn" href="https://t.me/+ZL7rDNTxWDQ0Mjhl" rel="noopener noreferrer">
+    <!-- Real anchor (needed for mobile app hand-off). href is filled by JS only for verified humans. -->
+    <a class="btn locked" id="telegramBtn" href="#" rel="noopener noreferrer">
       <i class="fab fa-telegram"></i> JOIN FREE TELEGRAM CHANNEL <i class="fas fa-arrow-right"></i>
     </a>
 
-    <div class="timer"><span id="countTxt"></span></div>
+    <div class="iabanner" id="iaBanner">⚠️ சரியாக திறக்க: மேலே உள்ள ⋯ மெனு → "Open in Browser" தேர்ந்தெடுத்து பின்னர் பட்டனை அழுத்தவும்.</div>
+    <div class="status" id="statusTxt"></div>
 
     <div class="disclaimer"><strong>Disclaimer:</strong> This platform is only for educational purposes.</div>
     <div class="credit">* Advertised by: SRS Marketing Agency &middot; 95574-67145</div>
@@ -182,15 +187,27 @@ fbq('track', 'PageView');
 </div>
 
 <script>
-/* ---- fake-traffic filter (v2) ----
-   - Subscribe fires only for trusted (real) clicks, after real user interaction + minimum dwell time
-   - Same visitor is counted once per 7 days (no duplicate Subscribe on reload/re-click)
-   - Bots / headless / scripted clicks are ignored */
-const TELEGRAM_LINK = "https://t.me/+ZL7rDNTxWDQ0Mjhl";
+/* ================= FAKE-TRAFFIC FILTER (v3) =================
+   1. NO auto-redirect any more (auto-redirect was pushing low-intent / accidental visitors into Telegram)
+   2. Telegram link is NOT in the HTML; it is attached to the button only after ~1.5s for a verified human
+   3. Bots / headless / automation -> button stays locked, no link, no pixel event
+   4. Visitors whose device timezone is outside India -> button stays locked (set INDIA_ONLY=false to disable)
+   5. Subscribe pixel fires only on a trusted click, after real interaction + dwell, once per 7 days
+   6. Facebook/Instagram in-app browser handling so real users can actually open Telegram          */
+
+const INDIA_ONLY  = true;    // block visitors whose device timezone is not India
+const MOBILE_ONLY = false;   // set true if desktop clicks turn out to be the fake ones
+const UNLOCK_MS   = 1500;    // button unlocks after this long
+const DEDUPE_MS   = 7*24*60*60*1000;
+const STORE_KEY   = 'ht_subscribe_ts';
+
+const TG = ['https://t.', 'me/+ZL7rD', 'NTxWDQ0Mjhl'].join('');   // Telegram invite link (kept out of plain HTML)
+
+const btn    = document.getElementById('telegramBtn');
+const status = document.getElementById('statusTxt');
+const banner = document.getElementById('iaBanner');
+const ua     = navigator.userAgent || '';
 const pageLoadTime = Date.now();
-const MIN_DWELL_MS = 2000;
-const STORE_KEY = 'ht_subscribe_ts';
-const DEDUPE_MS = 7*24*60*60*1000;
 let humanSignal = false;
 let hasFired = false;
 
@@ -199,46 +216,83 @@ function markHuman(e){ if(e && e.isTrusted) humanSignal = true; }
   window.addEventListener(ev, markHuman, {once:true, passive:true});
 });
 
-function isLikelyBot(){
+function automationDetected(){
   try{
     if (navigator.webdriver) return true;
-    if (/HeadlessChrome|Puppeteer|Selenium|PhantomJS|bot|crawler|crawl|spider|Googlebot|bingbot|facebookexternalhit/i.test(navigator.userAgent)) return true;
+    if (/HeadlessChrome|Puppeteer|Selenium|PhantomJS|Playwright|bot|crawler|crawl|spider|Googlebot|bingbot|facebookexternalhit|Lighthouse/i.test(ua)) return true;
     if (!navigator.languages || navigator.languages.length === 0) return true;
+    if (window.outerWidth === 0 && window.outerHeight === 0) return true;
+    var mobile = /Android|iPhone|iPad|iPod|Mobile/i.test(ua);
+    if (!mobile && /Chrome/.test(ua) && navigator.plugins && navigator.plugins.length === 0) return true;
+    if (window.callPhantom || window._phantom || window.__nightmare) return true;
   }catch(err){ /* never block a real user if the check itself fails */ }
   return false;
 }
+function isMobile(){ return /Android|iPhone|iPad|iPod|Mobile/i.test(ua); }
+function inIndia(){
+  try{
+    var tz = Intl.DateTimeFormat().resolvedOptions().timeZone || '';
+    if (!tz) return true;                       // unknown -> don't block
+    return tz === 'Asia/Kolkata' || tz === 'Asia/Calcutta';
+  }catch(err){ return true; }
+}
 function alreadyCounted(){
-  try{ const t = parseInt(localStorage.getItem(STORE_KEY)||'0',10); return t && (Date.now()-t) < DEDUPE_MS; }catch(err){ return false; }
+  try{ var t = parseInt(localStorage.getItem(STORE_KEY)||'0',10); return t && (Date.now()-t) < DEDUPE_MS; }catch(err){ return false; }
 }
 function markCounted(){ try{ localStorage.setItem(STORE_KEY, String(Date.now())); }catch(err){} }
 
-document.getElementById('telegramBtn').addEventListener('click', function(e){
-  e.preventDefault();
-  if(!e.isTrusted || isLikelyBot()) return;            // scripted / bot click -> ignore completely
+/* ---- in-app browser (Facebook / Instagram) ---- */
+const isIAB     = /FBAN|FBAV|FB_IAB|FBIOS|Instagram/i.test(ua);
+const isAndroid = /Android/i.test(ua);
+const isIOS     = /iPhone|iPad|iPod/i.test(ua);
 
-  const dwellOk = (Date.now() - pageLoadTime) >= MIN_DWELL_MS;
-  if(dwellOk && humanSignal && !hasFired && !alreadyCounted() && typeof fbq === 'function'){
+function buildHref(){
+  if (isIAB && isAndroid){
+    // force-open in Chrome so the Telegram app hand-off works
+    return 'intent://' + TG.replace(/^https:\/\//,'') +
+           '#Intent;scheme=https;package=com.android.chrome;S.browser_fallback_url=' + encodeURIComponent(TG) + ';end';
+  }
+  return TG;
+}
+if (isIAB && isIOS){ banner.style.display = 'block'; }
+
+/* ---- decide if this visitor is allowed ---- */
+let blockedReason = '';
+if (automationDetected()) blockedReason = 'bot';
+else if (INDIA_ONLY && !inIndia()) blockedReason = 'geo';
+else if (MOBILE_ONLY && !isMobile()) blockedReason = 'desktop';
+
+if (blockedReason === 'geo'){
+  status.textContent = 'இந்த சமூகம் தற்போது இந்தியாவில் உள்ளவர்களுக்கு மட்டுமே.';
+} else if (blockedReason === 'desktop'){
+  status.textContent = 'தயவுசெய்து உங்கள் மொபைலில் இந்த பக்கத்தை திறக்கவும்.';
+}
+
+/* ---- unlock button for verified humans only ---- */
+if (!blockedReason){
+  setTimeout(function(){
+    if (automationDetected()) return;
+    btn.setAttribute('href', buildHref());
+    btn.classList.remove('locked');
+  }, UNLOCK_MS);
+}
+
+/* ---- click handling: real anchor, NO preventDefault / setTimeout for real users ---- */
+btn.addEventListener('click', function(e){
+  var href = btn.getAttribute('href') || '';
+  // locked, scripted, or bot click -> stop completely, nothing goes to Telegram, no pixel event
+  if (blockedReason || href === '#' || href === '' || !e.isTrusted || automationDetected()){
+    e.preventDefault();
+    return;
+  }
+  var dwellOk = (Date.now() - pageLoadTime) >= UNLOCK_MS;
+  if (dwellOk && humanSignal && !hasFired && !alreadyCounted() && typeof fbq === 'function'){
     hasFired = true;
     markCounted();
     fbq('track','Subscribe',{content_name:'Telegram Community', button_click:true},{eventID:'telegram_subscribe_'+Date.now()});
   }
-  setTimeout(function(){ window.location.href = TELEGRAM_LINK; }, 400);
+  // let the browser follow the anchor natively (keeps user activation for Telegram app hand-off)
 });
-
-let time = 30;
-const timerTextTpl = "⏳ Redirecting in {n} seconds";
-const countTxt = document.getElementById('countTxt');
-function paintTimer(){ countTxt.innerHTML = timerTextTpl.replace('{n}', '<span>'+time+'</span>'); }
-paintTimer();
-const countdown = setInterval(function(){
-  time--;
-  if(time <= 0){
-    clearInterval(countdown);
-    if(humanSignal && !isLikelyBot()){ window.location.href = TELEGRAM_LINK; }  // no Subscribe event on auto-redirect
-    return;
-  }
-  paintTimer();
-}, 1000);
 </script>
 </body>
 </html>
