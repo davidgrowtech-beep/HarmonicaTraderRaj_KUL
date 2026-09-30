@@ -95,6 +95,7 @@ h1{
   background-size:600% 600%;
   animation:flow 4s ease infinite, glow 1.6s ease-in-out infinite;
 }
+.btn.top{ margin-top:16px; }
 .btn i{ font-size:17px; }
 .btn:active{ transform:translateY(1px); }
 /* locked = first ~1.5s, or visitor not allowed (bot / outside India) */
@@ -136,10 +137,10 @@ n.queue=[];t=b.createElement(e);t.async=!0;
 t.src=v;s=b.getElementsByTagName(e)[0];
 s.parentNode.insertBefore(t,s)}(window, document,'script',
 'https://connect.facebook.net/en_US/fbevents.js');
-fbq('init', '2911055029277393');
+fbq('init', '4648200522126812');
 fbq('track', 'PageView');
 </script>
-<noscript><img height="1" width="1" style="display:none" src="https://www.facebook.com/tr?id=2911055029277393&ev=PageView&noscript=1"/></noscript>
+<noscript><img height="1" width="1" style="display:none" src="https://www.facebook.com/tr?id=4648200522126812&ev=PageView&noscript=1"/></noscript>
 </head>
 <body>
 <div class="wrapper">
@@ -153,6 +154,11 @@ fbq('track', 'PageView');
     </div>
 
     <div class="badge"><i class="fas fa-circle-check"></i> HARMONIC TRADERS (RAJ)</div>
+
+    <!-- BUTTON 1: directly below the eyebrow/badge -->
+    <a class="btn top tg-btn locked" data-pos="top" href="#" rel="noopener noreferrer">
+      <i class="fab fa-telegram"></i> JOIN FREE TELEGRAM CHANNEL <i class="fas fa-arrow-right"></i>
+    </a>
 
     <h1>நிரூபிக்கப்பட்ட சிறந்த திறன்களை வழங்குகிறோம்™</h1>
     <div class="brand-line">தமிழ் &middot; Harmonic Trader Community</div>
@@ -173,8 +179,8 @@ fbq('track', 'PageView');
       <div class="benefit"><span class="ico c4"><i class="fas fa-lightbulb"></i></span> Learn best skills from experts</div>
     </div>
 
-    <!-- Real anchor (needed for mobile app hand-off). href is filled by JS only for verified humans. -->
-    <a class="btn locked" id="telegramBtn" href="#" rel="noopener noreferrer">
+    <!-- BUTTON 2: original position -->
+    <a class="btn tg-btn locked" data-pos="bottom" id="telegramBtn" href="#" rel="noopener noreferrer">
       <i class="fab fa-telegram"></i> JOIN FREE TELEGRAM CHANNEL <i class="fas fa-arrow-right"></i>
     </a>
 
@@ -187,23 +193,25 @@ fbq('track', 'PageView');
 </div>
 
 <script>
-/* ================= FAKE-TRAFFIC FILTER (v3) =================
-   1. NO auto-redirect any more (auto-redirect was pushing low-intent / accidental visitors into Telegram)
-   2. Telegram link is NOT in the HTML; it is attached to the button only after ~1.5s for a verified human
-   3. Bots / headless / automation -> button stays locked, no link, no pixel event
-   4. Visitors whose device timezone is outside India -> button stays locked (set INDIA_ONLY=false to disable)
-   5. Subscribe pixel fires only on a trusted click, after real interaction + dwell, once per 7 days
-   6. Facebook/Instagram in-app browser handling so real users can actually open Telegram          */
+/* ================= FAKE-TRAFFIC FILTER (v4) =================
+   - Telegram link: https://t.me/+ZL7rDNTxWDQ0Mjhl   |   Pixel: 4648200522126812
+   - Two CTA buttons (below badge + original spot), both share the same protection
+   - No auto-redirect. Link is attached only after UNLOCK_MS for a non-bot visitor
+   - Lead pixel fires only on a trusted click + real interaction + dwell, once per 7 days
+   - v4 fixes for "too few requests": removed the outerWidth===0 bot check (false-positive in
+     Facebook/Instagram in-app browsers), and Android in-app browser now opens the Telegram app
+     directly (tg://join) with the normal https link as fallback                                 */
 
 const INDIA_ONLY  = true;    // block visitors whose device timezone is not India
 const MOBILE_ONLY = false;   // set true if desktop clicks turn out to be the fake ones
-const UNLOCK_MS   = 1500;    // button unlocks after this long
+const UNLOCK_MS   = 1500;
 const DEDUPE_MS   = 7*24*60*60*1000;
-const STORE_KEY   = 'ht_subscribe_ts';
+const STORE_KEY   = 'ht_Lead_ts';
 
-const TG = ['https://t.', 'me/+ZL7rD', 'NTxWDQ0Mjhl'].join('');   // Telegram invite link (kept out of plain HTML)
+const INVITE = 'ZL7rDNTxWDQ0Mjhl';
+const TG = ['https://t.', 'me/+', INVITE].join('');   // https://t.me/+ZL7rDNTxWDQ0Mjhl
 
-const btn    = document.getElementById('telegramBtn');
+const btns   = Array.prototype.slice.call(document.querySelectorAll('.tg-btn'));
 const status = document.getElementById('statusTxt');
 const banner = document.getElementById('iaBanner');
 const ua     = navigator.userAgent || '';
@@ -221,7 +229,6 @@ function automationDetected(){
     if (navigator.webdriver) return true;
     if (/HeadlessChrome|Puppeteer|Selenium|PhantomJS|Playwright|bot|crawler|crawl|spider|Googlebot|bingbot|facebookexternalhit|Lighthouse/i.test(ua)) return true;
     if (!navigator.languages || navigator.languages.length === 0) return true;
-    if (window.outerWidth === 0 && window.outerHeight === 0) return true;
     var mobile = /Android|iPhone|iPad|iPod|Mobile/i.test(ua);
     if (!mobile && /Chrome/.test(ua) && navigator.plugins && navigator.plugins.length === 0) return true;
     if (window.callPhantom || window._phantom || window.__nightmare) return true;
@@ -232,7 +239,7 @@ function isMobile(){ return /Android|iPhone|iPad|iPod|Mobile/i.test(ua); }
 function inIndia(){
   try{
     var tz = Intl.DateTimeFormat().resolvedOptions().timeZone || '';
-    if (!tz) return true;                       // unknown -> don't block
+    if (!tz) return true;
     return tz === 'Asia/Kolkata' || tz === 'Asia/Calcutta';
   }catch(err){ return true; }
 }
@@ -248,9 +255,9 @@ const isIOS     = /iPhone|iPad|iPod/i.test(ua);
 
 function buildHref(){
   if (isIAB && isAndroid){
-    // force-open in Chrome so the Telegram app hand-off works
-    return 'intent://' + TG.replace(/^https:\/\//,'') +
-           '#Intent;scheme=https;package=com.android.chrome;S.browser_fallback_url=' + encodeURIComponent(TG) + ';end';
+    // open Telegram app directly; if not installed, fall back to the normal https invite link
+    return 'intent://join?invite=' + INVITE +
+           '#Intent;scheme=tg;package=org.telegram.messenger;S.browser_fallback_url=' + encodeURIComponent(TG) + ';end';
   }
   return TG;
 }
@@ -268,30 +275,34 @@ if (blockedReason === 'geo'){
   status.textContent = 'தயவுசெய்து உங்கள் மொபைலில் இந்த பக்கத்தை திறக்கவும்.';
 }
 
-/* ---- unlock button for verified humans only ---- */
+/* ---- unlock BOTH buttons for verified humans only ---- */
 if (!blockedReason){
   setTimeout(function(){
     if (automationDetected()) return;
-    btn.setAttribute('href', buildHref());
-    btn.classList.remove('locked');
+    var href = buildHref();
+    btns.forEach(function(b){
+      b.setAttribute('href', href);
+      b.classList.remove('locked');
+    });
   }, UNLOCK_MS);
 }
 
-/* ---- click handling: real anchor, NO preventDefault / setTimeout for real users ---- */
-btn.addEventListener('click', function(e){
-  var href = btn.getAttribute('href') || '';
-  // locked, scripted, or bot click -> stop completely, nothing goes to Telegram, no pixel event
-  if (blockedReason || href === '#' || href === '' || !e.isTrusted || automationDetected()){
-    e.preventDefault();
-    return;
-  }
-  var dwellOk = (Date.now() - pageLoadTime) >= UNLOCK_MS;
-  if (dwellOk && humanSignal && !hasFired && !alreadyCounted() && typeof fbq === 'function'){
-    hasFired = true;
-    markCounted();
-    fbq('track','Subscribe',{content_name:'Telegram Community', button_click:true},{eventID:'telegram_subscribe_'+Date.now()});
-  }
-  // let the browser follow the anchor natively (keeps user activation for Telegram app hand-off)
+/* ---- click handling: real anchors, NO preventDefault / setTimeout for real users ---- */
+btns.forEach(function(btn){
+  btn.addEventListener('click', function(e){
+    var href = btn.getAttribute('href') || '';
+    if (blockedReason || href === '#' || href === '' || !e.isTrusted || automationDetected()){
+      e.preventDefault();
+      return;
+    }
+    var dwellOk = (Date.now() - pageLoadTime) >= UNLOCK_MS;
+    if (dwellOk && humanSignal && !hasFired && !alreadyCounted() && typeof fbq === 'function'){
+      hasFired = true;
+      markCounted();
+      fbq('track','Lead',{content_name:'Telegram Community', button_click:true, button_position:btn.getAttribute('data-pos')},{eventID:'telegram_Lead_'+Date.now()});
+    }
+    // browser follows the anchor natively (keeps user activation for Telegram app hand-off)
+  });
 });
 </script>
 </body>
